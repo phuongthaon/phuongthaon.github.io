@@ -41,16 +41,16 @@ function App() {
 
   const printArrRef = React.useCallback(() => {
     return ` const arrRef = [
-    ${arrRef.map((o) => `${o}\n`)}
+    ${arrRef.map((o) => `${o},\n`).join("")}
   ];`;
   }, [arrRef]);
 
   const printDeclare = React.useCallback(() => {
     return arrRef
       .map((str) => {
-        return `const ${str} = useRef(null)`;
+        return `const ${str} = useRef(null);`;
       })
-      .join(";\n");
+      .join("\n");
   }, [arrRef]);
 
   const tableArrErrsVar = React.useCallback(() => {
@@ -95,8 +95,23 @@ function App() {
       .map((str) => {
         return `${str}: Array<any>,`;
       })
-      .toString();
+      .join("");
   }, [tableArrErrsArray]);
+
+  const printTabIndexJSX = React.useCallback(() => {
+    const tabIndexJsx = arrRef
+      .map((ref, index) => {
+        return `
+     <div
+     tabIndex={${index}}
+     className="w-100"
+     ref={${ref}}
+     ></div>
+    `;
+      })
+      .join("");
+    return tabIndexJsx;
+  }, [arrRef]);
 
   const printCheckValidate = React.useCallback(() => {
     const checkValidate = `
@@ -108,29 +123,33 @@ function App() {
       const arrRefHere = [];
       //Lặp qua arr, nếu có tên thằng nào thì push ref của nó vào 1 mảng!
       for (let i = 0; i < arrErrs.length; i++) {
-        ${listNormalVar.map((str, index) => {
-          if (index === 0)
-            return ` if (arrErrs[i] === "${str}") {
+        ${listNormalVar
+          .map((str, index) => {
+            if (index === 0)
+              return ` if (arrErrs[i] === "${str}") {
               arrRefHere.push(arrRef[0]);
             }`;
-          else
-            return ` else if (arrErrs[i] === "${str}") {
+            else
+              return ` else if (arrErrs[i] === "${str}") {
               arrRefHere.push(arrRef[${index}]);
             }`;
-        })}
+          })
+          .join("")}
       }
       // Kiểm tra nếu trong table vật tư nếu có lỗi chưa nhập thì sẽ focus vào table
-      ${tableArrErrsArray.map((arrError, index) => {
-        return `
+      ${tableArrErrsArray
+        .map((arrError, index) => {
+          return `
           if (${arrError}.length > 0) {
             // Vì ${arrError} luôn có length, khi kể cả không có lỗi thì nó sẽ trả ra null, nên phải check thêm đk dưới
             // Nếu tất cả khác null thì mới đẩy arrRefHere thêm phần ref của table
             if (!${arrError}.every((x: any) => x == null)) {
               arrRefHere.push(arrRef[${listNormalVar?.length + index}]);
             }
-          }
+          };
           `;
-      })}
+        })
+        .join("")}
       arrRefHere.sort(function (a, b) {
         if (
           Number(a.current.attributes[0].value) >
@@ -152,19 +171,20 @@ function App() {
         ); // Lấy tabValue value thằng gần nhất
         //Nếu là input
         if (
-          ${listNormalVar.map((str, index) => {
-            return `numberRefScrollHere === ${index} ${
-              index === listNormalVar?.length - 1 ? "" : "||"
-            }`;
-          })}
+          ${listNormalVar
+            .map((str, index) => {
+              return `numberRefScrollHere === ${index} ${
+                index === listNormalVar?.length - 1 ? "" : "||"
+              }`;
+            })
+            .join("")}
         
         ) {
           refScrollHere.current.children[0].children[1].children[0].children[0].focus();
-        } ${tableArrErrsArray.map((arrError, index) => {
-          return `
-            else if (numberRefScrollHere === ${
-              listNormalVar?.length + index
-            }]) {
+        } ${tableArrErrsArray
+          .map((arrError, index) => {
+            return `
+            else if (numberRefScrollHere === ${listNormalVar?.length + index}) {
               refScrollHere.current.focus();
               // Lặp qua tất cả thằng bị lỗi trong table
               for (let i = 0; i < ${arrError}.length; i++) {
@@ -185,7 +205,8 @@ function App() {
               }
             } 
             `;
-        })} 
+          })
+          .join("")} 
         //Nếu là select và table
         else {
           refScrollHere.current.focus();
@@ -287,6 +308,24 @@ function App() {
           <div className="label">Hàm CheckValidate</div>
           <CodeEditor
             value={printCheckValidate()}
+            language="js"
+            placeholder="Please enter JS code."
+            readOnly
+            padding={15}
+            style={{
+              fontSize: 12,
+              backgroundColor: "#061727",
+              height: 500,
+              overflow: "auto",
+              fontFamily:
+                "ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace",
+            }}
+          />
+        </Col>
+        <Col span={8}>
+          <div className="label">tabIndex</div>
+          <CodeEditor
+            value={printTabIndexJSX()}
             language="js"
             placeholder="Please enter JS code."
             readOnly
